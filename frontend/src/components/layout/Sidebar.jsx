@@ -60,7 +60,7 @@ const Sidebar = ({
     ];
     
     const inventoryRoutes = [
-      "/inventory/products",
+      "/product",
       "/inventory/suppliers",
       "/inventory/warehouse",
     ];
@@ -279,7 +279,7 @@ const Sidebar = ({
             onToggle={() => setInventoryOpen(!inventoryOpen)}
             minimized={isMinimized}
           >
-            <SubNavItem to="/inventory/products" icon={Package}>
+            <SubNavItem to="/product" icon={Package}>
               Products
             </SubNavItem>
             <SubNavItem to="/inventory/suppliers" icon={Users}>

@@ -24,22 +24,18 @@ class ProductController extends Controller
 
     public function store(
         StoreProductRequest $request,
-        ProductService $productService
+        ProductService $service
     ) {
-        $data = $request->validated();
-
-        $resolved = $productService->resolveType($data);
+        $resolved = $service->resolveType($request->validated());
 
         $product = Product::create([
-            'type_id'     => $resolved['type_id'],
-            'category_id' => $resolved['category_id'],
-            'subtype_id'  => $resolved['subtype_id'],
-            'harga_jual'  => $data['harga_jual'],
-            'aktif'       => true,
+            ...$resolved,
+            'harga_jual' => $request->harga_jual,
+            'aktif' => true,
         ]);
 
         return response()->json(
-            $product->load(['category', 'subtype', 'type']),
+            $product->load(['category', 'type', 'subtype']),
             201
         );
     }
@@ -47,19 +43,21 @@ class ProductController extends Controller
     public function update(
         UpdateProductRequest $request,
         Product $product,
-        ProductService $productService
+        ProductService $service
     ) {
         $data = $request->validated();
 
-        if (isset($data['type_id']) || isset($data['type'])) {
-            $resolved = $productService->resolveType($data);
+        $resolved = [];
 
-            $data['type_id']     = $resolved['type_id'];
-            $data['category_id'] = $resolved['category_id'];
-            $data['subtype_id']  = $resolved['subtype_id'];
+        // HANYA resolve kalau ada perubahan type
+        if (isset($data['type_id']) || isset($data['type'])) {
+            $resolved = $service->resolveType($data);
         }
 
-        $product->update($data);
+        $product->update([
+            ...$data,
+            ...$resolved,
+        ]);
 
         return $product->load(['category', 'type', 'subtype']);
     }
@@ -69,7 +67,7 @@ class ProductController extends Controller
         $product->delete();
 
         return response()->json([
-            'message' => 'Produk berhasil dihapus'
+            'message' => 'Produk berhasil dihapus',
         ]);
     }
 }

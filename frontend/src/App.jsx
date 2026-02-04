@@ -4,6 +4,7 @@ import RegisterPage from "./pages/RegisterPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/layout/Layout";
 import Dashboard from "./pages/admin/Dashboard";
+import ProductPage from "./pages/admin/ProductPage";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           }
         >
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/product" element={<ProductPage />} />
         </Route>
 
         <Route path="/" element={<Dashboard />} />
