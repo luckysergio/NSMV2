@@ -203,9 +203,7 @@ const Sidebar = ({
     );
   };
 
-  /* =====================
-   * Main Sidebar Content Component
-   * ===================== */
+
   const SidebarContent = ({ isMobile = false }) => {
     const isMinimized = isMobile ? false : minimized;
 

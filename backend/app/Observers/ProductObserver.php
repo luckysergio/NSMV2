@@ -3,27 +3,48 @@
 namespace App\Observers;
 
 use App\Models\Product;
-use App\Models\ProductType;
 
 class ProductObserver
 {
-    public function creating(Product $product): void
+    public function saving(Product $product): void
     {
-        $this->syncFromType($product);
-    }
-
-    public function updating(Product $product): void
-    {
-        if ($product->isDirty('type_id')) {
-            $this->syncFromType($product);
+        if (
+            !$product->category_id ||
+            !$product->subtype_id ||
+            !$product->type_id
+        ) {
+            return;
         }
-    }
 
-    private function syncFromType(Product $product): void
-    {
-        $type = ProductType::findOrFail($product->type_id);
+        $product->loadMissing(['category', 'subtype', 'type']);
 
-        $product->category_id = $type->category_id;
-        $product->subtype_id  = $type->subtype_id;
+        $category = strtoupper($product->category->nama);
+        $subtype  = strtoupper($product->subtype->nama);
+        $type     = strtoupper($product->type->nama);
+
+        // ===== KODE =====
+        $categoryCode = substr($category, 0, 1);
+
+        $subtypeCode = collect(explode(' ', $subtype))
+            ->map(fn ($w) => substr($w, 0, 1))
+            ->implode('');
+
+        $typeCode = str_replace(' ', '', $type);
+
+        $baseKode = $categoryCode . $subtypeCode . $typeCode;
+        $kode = $baseKode;
+        $i = 1;
+
+        while (
+            Product::where('kode_produk', $kode)
+                ->when($product->exists, fn ($q) => $q->where('id', '!=', $product->id))
+                ->exists()
+        ) {
+            $kode = "{$baseKode}-{$i}";
+            $i++;
+        }
+
+        $product->kode_produk = $kode;
+        $product->nama_produk = "{$category} {$subtype} {$type}";
     }
 }
