@@ -10,7 +10,6 @@ class ProductCategory extends Model
     use HasFactory;
 
     protected $fillable = [
-        'kode',
         'nama',
         'satuan',
         'aktif',

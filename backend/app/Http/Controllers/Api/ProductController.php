@@ -12,18 +12,14 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with(['category', 'type', 'subtype'])
+        return Product::with(['category', 'type', 'subtype'])
             ->where('aktif', true)
             ->get();
-
-        return response()->json($products, 200);
     }
 
     public function show(Product $product)
     {
-        $product->load(['category', 'type', 'subtype']);
-
-        return response()->json($product, 200);
+        return $product->load(['category', 'type', 'subtype']);
     }
 
     public function store(
@@ -48,7 +44,6 @@ class ProductController extends Controller
         );
     }
 
-
     public function update(
         UpdateProductRequest $request,
         Product $product,
@@ -56,16 +51,17 @@ class ProductController extends Controller
     ) {
         $data = $request->validated();
 
-        // Jika type berubah / dikirim ulang
         if (isset($data['type_id']) || isset($data['type'])) {
-            $data['type_id'] = $productService->resolveType($data);
+            $resolved = $productService->resolveType($data);
+
+            $data['type_id']     = $resolved['type_id'];
+            $data['category_id'] = $resolved['category_id'];
+            $data['subtype_id']  = $resolved['subtype_id'];
         }
 
         $product->update($data);
 
-        $product->load(['category', 'type', 'subtype']);
-
-        return response()->json($product, 200);
+        return $product->load(['category', 'type', 'subtype']);
     }
 
     public function destroy(Product $product)
@@ -74,6 +70,6 @@ class ProductController extends Controller
 
         return response()->json([
             'message' => 'Produk berhasil dihapus'
-        ], 200);
+        ]);
     }
 }

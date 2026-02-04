@@ -8,11 +8,7 @@ class ProductObserver
 {
     public function saving(Product $product): void
     {
-        if (
-            !$product->category_id ||
-            !$product->subtype_id ||
-            !$product->type_id
-        ) {
+        if (!$product->category_id || !$product->subtype_id || !$product->type_id) {
             return;
         }
 
@@ -22,7 +18,6 @@ class ProductObserver
         $subtype  = strtoupper($product->subtype->nama);
         $type     = strtoupper($product->type->nama);
 
-        // ===== KODE =====
         $categoryCode = substr($category, 0, 1);
 
         $subtypeCode = collect(explode(' ', $subtype))

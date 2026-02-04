@@ -2,10 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\ProductCategory;
-use App\Models\ProductSubtype;
 use App\Models\ProductType;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ProductService
 {
@@ -16,21 +15,23 @@ class ProductService
             if (!empty($data['type_id'])) {
                 $type = ProductType::with(['category', 'subtype'])
                     ->findOrFail($data['type_id']);
-            } else {
-                $category = ProductCategory::firstOrCreate([
-                    'nama' => $data['type']['category']['nama'],
-                ]);
+            }
+            else {
+                $type = ProductType::with(['category', 'subtype'])
+                    ->where('nama', $data['type']['nama'])
+                    ->whereHas('category', fn ($q) =>
+                        $q->where('nama', $data['type']['category']['nama'])
+                    )
+                    ->whereHas('subtype', fn ($q) =>
+                        $q->where('nama', $data['type']['subtype']['nama'])
+                    )
+                    ->first();
 
-                $subtype = ProductSubtype::firstOrCreate([
-                    'nama'        => $data['type']['subtype']['nama'],
-                    'category_id' => $category->id,
-                ]);
-
-                $type = ProductType::firstOrCreate([
-                    'nama'        => $data['type']['nama'],
-                    'category_id' => $category->id,
-                    'subtype_id'  => $subtype->id,
-                ]);
+                if (!$type) {
+                    throw ValidationException::withMessages([
+                        'type' => 'Category / Subtype / Type belum terdaftar. Silakan pilih data master yang sudah ada.',
+                    ]);
+                }
             }
 
             return [
