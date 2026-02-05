@@ -19,12 +19,16 @@ export default function SubtypePage() {
   });
 
   const fetchData = async () => {
-    const [sub, cat] = await Promise.all([
-      api.get("/product-subtypes"),
-      api.get("/product-categories"),
-    ]);
-    setData(sub.data);
-    setCategories(cat.data);
+    try {
+      const [sub, cat] = await Promise.all([
+        api.get("/product-subtypes"),
+        api.get("/product-categories"),
+      ]);
+      setData(sub.data);
+      setCategories(cat.data);
+    } catch {
+      Swal.fire("Error", "Gagal memuat data", "error");
+    }
   };
 
   useEffect(() => {
@@ -50,6 +54,7 @@ export default function SubtypePage() {
   const handleDelete = async (id) => {
     const confirm = await Swal.fire({
       title: "Hapus Subtype?",
+      text: "Data tidak bisa dikembalikan",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#dc2626",
@@ -58,25 +63,51 @@ export default function SubtypePage() {
 
     if (!confirm.isConfirmed) return;
 
-    await api.delete(`/product-subtypes/${id}`);
-    fetchData();
+    Swal.fire({
+      title: "Menghapus...",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    try {
+      await api.delete(`/product-subtypes/${id}`);
+      await fetchData();
+      Swal.fire("Berhasil", "Subtype berhasil dihapus", "success");
+    } catch {
+      Swal.fire("Error", "Gagal menghapus subtype", "error");
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!form.category_id) {
+      return Swal.fire("Error", "Category wajib dipilih", "error");
+    }
+
+    if (!form.nama) {
+      return Swal.fire("Error", "Nama subtype wajib diisi", "error");
+    }
+
     setSubmitting(true);
 
     try {
       if (editingId) {
         await api.put(`/product-subtypes/${editingId}`, form);
+        Swal.fire("Berhasil", "Subtype berhasil diperbarui", "success");
       } else {
         await api.post("/product-subtypes", form);
+        Swal.fire("Berhasil", "Subtype berhasil ditambahkan", "success");
       }
 
       setShowModal(false);
       fetchData();
     } catch (err) {
-      Swal.fire("Error", err.response?.data?.message, "error");
+      Swal.fire(
+        "Error",
+        err.response?.data?.message || "Terjadi kesalahan",
+        "error"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -99,8 +130,12 @@ export default function SubtypePage() {
               className="bg-slate-900 border border-slate-700 rounded-2xl p-5 space-y-4"
             >
               <div>
-                <h3 className="text-lg font-bold text-emerald-400">{s.nama}</h3>
-                <p className="text-sm text-slate-400">{s.category?.nama}</p>
+                <h3 className="text-lg font-bold text-emerald-400">
+                  {s.nama}
+                </h3>
+                <p className="text-sm text-slate-400">
+                  {s.category?.nama}
+                </p>
               </div>
 
               <div className="flex gap-2">
@@ -134,7 +169,9 @@ export default function SubtypePage() {
         <div className="fixed inset-0 flex items-center justify-center bg-black/60">
           <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl p-6">
             <div className="flex justify-between mb-4">
-              <h2>{editingId ? "Edit Subtype" : "Tambah Subtype"}</h2>
+              <h2 className="text-lg font-semibold">
+                {editingId ? "Edit Subtype" : "Tambah Subtype"}
+              </h2>
               <button onClick={() => setShowModal(false)}>
                 <X />
               </button>
@@ -147,6 +184,7 @@ export default function SubtypePage() {
                 onChange={(e) =>
                   setForm({ ...form, category_id: e.target.value })
                 }
+                required
               >
                 <option value="">Pilih Category</option>
                 {categories.map((c) => (
@@ -161,6 +199,7 @@ export default function SubtypePage() {
                 placeholder="Nama Subtype"
                 value={form.nama}
                 onChange={(e) => setForm({ ...form, nama: e.target.value })}
+                required
               />
 
               <label className="flex items-center gap-2">
@@ -176,10 +215,14 @@ export default function SubtypePage() {
 
               <button
                 disabled={submitting}
-                className="w-full py-3 rounded-xl bg-emerald-600"
+                className="w-full py-4 text-lg font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-500 flex items-center justify-center gap-2 disabled:opacity-60"
               >
-                {submitting && <Loader2 className="animate-spin" size={18} />}
-                Simpan
+                {submitting && <Loader2 className="animate-spin" size={20} />}
+                {submitting
+                  ? editingId
+                    ? "Menyimpan..."
+                    : "Menambahkan..."
+                  : "Simpan"}
               </button>
             </form>
           </div>

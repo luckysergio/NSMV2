@@ -18,8 +18,12 @@ export default function CategoryPage() {
   });
 
   const fetchData = async () => {
-    const res = await api.get("/product-categories");
-    setData(res.data);
+    try {
+      const res = await api.get("/product-categories");
+      setData(res.data);
+    } catch (err) {
+      Swal.fire("Error", "Gagal memuat data kategori", "error");
+    }
   };
 
   useEffect(() => {
@@ -45,6 +49,7 @@ export default function CategoryPage() {
   const handleDelete = async (id) => {
     const confirm = await Swal.fire({
       title: "Hapus Category?",
+      text: "Data yang dihapus tidak bisa dikembalikan",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#dc2626",
@@ -53,8 +58,20 @@ export default function CategoryPage() {
 
     if (!confirm.isConfirmed) return;
 
-    await api.delete(`/product-categories/${id}`);
-    fetchData();
+    Swal.fire({
+      title: "Menghapus...",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    try {
+      await api.delete(`/product-categories/${id}`);
+      await fetchData();
+
+      Swal.fire("Berhasil", "Category berhasil dihapus", "success");
+    } catch (err) {
+      Swal.fire("Error", "Gagal menghapus category", "error");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -64,14 +81,20 @@ export default function CategoryPage() {
     try {
       if (editingId) {
         await api.put(`/product-categories/${editingId}`, form);
+        Swal.fire("Berhasil", "Category berhasil diperbarui", "success");
       } else {
         await api.post("/product-categories", form);
+        Swal.fire("Berhasil", "Category berhasil ditambahkan", "success");
       }
 
       setShowModal(false);
       fetchData();
     } catch (err) {
-      Swal.fire("Error", err.response?.data?.message, "error");
+      Swal.fire(
+        "Error",
+        err.response?.data?.message || "Terjadi kesalahan",
+        "error"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -87,7 +110,6 @@ export default function CategoryPage() {
   return (
     <div className="min-h-screen text-slate-200 p-6">
       <div className="max-w-7xl mx-auto">
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {data.map((c) => (
             <div
@@ -134,7 +156,9 @@ export default function CategoryPage() {
         <div className="fixed inset-0 flex items-center justify-center bg-black/60">
           <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl p-6">
             <div className="flex justify-between mb-4">
-              <h2>{editingId ? "Edit Category" : "Tambah Category"}</h2>
+              <h2 className="text-lg font-semibold">
+                {editingId ? "Edit Category" : "Tambah Category"}
+              </h2>
               <button onClick={() => setShowModal(false)}>
                 <X />
               </button>
@@ -148,6 +172,7 @@ export default function CategoryPage() {
                 onChange={(e) =>
                   setForm({ ...form, nama: e.target.value })
                 }
+                required
               />
 
               <input
@@ -157,6 +182,7 @@ export default function CategoryPage() {
                 onChange={(e) =>
                   setForm({ ...form, satuan: e.target.value })
                 }
+                required
               />
 
               <label className="flex items-center gap-2">
@@ -172,10 +198,14 @@ export default function CategoryPage() {
 
               <button
                 disabled={submitting}
-                className="w-full py-3 rounded-xl bg-emerald-600"
+                className="w-full py-4 text-lg font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-500 flex items-center justify-center gap-2 disabled:opacity-60"
               >
-                {submitting && <Loader2 className="animate-spin" size={18} />}
-                Simpan
+                {submitting && <Loader2 className="animate-spin" size={20} />}
+                {submitting
+                  ? editingId
+                    ? "Menyimpan..."
+                    : "Menambahkan..."
+                  : "Simpan"}
               </button>
             </form>
           </div>

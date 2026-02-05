@@ -52,17 +52,19 @@ const Sidebar = ({
    * ===================== */
   useEffect(() => {
     const path = location.pathname;
+
     const masterRoutes = [
       "/master/user",
       "/master/product/type",
       "/master/product/subtype",
       "/master/product/category",
     ];
-    
+
     const inventoryRoutes = [
       "/product",
-      "/inventory/suppliers",
-      "/inventory/warehouse",
+      "/type",
+      "/category",
+      "/subtype",
     ];
 
     setMasterDataOpen(
@@ -70,7 +72,7 @@ const Sidebar = ({
         (route) => path === route || path.startsWith(route + "/")
       )
     );
-    
+
     setInventoryOpen(
       inventoryRoutes.some(
         (route) => path === route || path.startsWith(route + "/")
@@ -79,7 +81,7 @@ const Sidebar = ({
   }, [location.pathname]);
 
   /* =====================
-   * Components - Shared between Desktop & Mobile
+   * Components
    * ===================== */
   const NavItem = ({ to, icon: Icon, children, badge, onClick }) => {
     const isActive = location.pathname === to;
@@ -110,7 +112,7 @@ const Sidebar = ({
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
           )}
         </div>
-        
+
         {!isMinimized && (
           <>
             <span className="font-medium flex-1">{children}</span>
@@ -121,25 +123,15 @@ const Sidebar = ({
             )}
           </>
         )}
-
-        {isActive && !isMinimized && (
-          <span className="absolute right-3 w-1.5 h-1.5 bg-white rounded-full" />
-        )}
-        
-        {!isMinimized && (
-          <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full transition-all duration-300 ${
-            isActive ? "bg-white" : "bg-transparent"
-          }`} />
-        )}
       </Link>
     );
   };
 
-  const CollapsibleSection = ({ 
-    icon: Icon, 
-    title, 
-    open, 
-    onToggle, 
+  const CollapsibleSection = ({
+    icon: Icon,
+    title,
+    open,
+    onToggle,
     children,
     minimized: isMinimized
   }) => {
@@ -157,7 +149,7 @@ const Sidebar = ({
             <Icon className="w-5 h-5 text-gray-500 group-hover:text-blue-500 transition-colors" />
             {!isMinimized && <span className="font-medium">{title}</span>}
           </div>
-          
+
           {!isMinimized && (
             <ChevronDown
               className={`w-4 h-4 text-gray-400 transition-all duration-300 ${
@@ -168,7 +160,7 @@ const Sidebar = ({
         </button>
 
         {!isMinimized && open && (
-          <div className="ml-9 pl-3 border-l-2 border-gray-200 space-y-1 animate-fadeIn">
+          <div className="ml-9 pl-3 border-l-2 border-gray-200 space-y-1">
             {children}
           </div>
         )}
@@ -203,7 +195,6 @@ const Sidebar = ({
     );
   };
 
-
   const SidebarContent = ({ isMobile = false }) => {
     const isMinimized = isMobile ? false : minimized;
 
@@ -215,9 +206,9 @@ const Sidebar = ({
             <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-sm">
               <Building2 className="w-5 h-5" />
             </div>
-            
+
             {!isMinimized && (
-              <div className="animate-fadeIn">
+              <div>
                 <p className="text-sm font-bold text-gray-800 truncate">
                   Niaga Solusi Mandiri
                 </p>
@@ -231,8 +222,7 @@ const Sidebar = ({
           {!isMobile && (
             <button
               onClick={toggleMinimize}
-              className="p-2 rounded-xl hover:bg-gray-100 transition-all duration-200 active:scale-95"
-              aria-label={minimized ? "Expand sidebar" : "Minimize sidebar"}
+              className="p-2 rounded-xl hover:bg-gray-100"
             >
               <ArrowLeft
                 className={`w-4 h-4 transition-all duration-300 ${
@@ -243,35 +233,23 @@ const Sidebar = ({
           )}
 
           {isMobile && (
-            <button 
-              onClick={() => setSidebarOpen(false)}
-              className="p-2 rounded-xl hover:bg-gray-100 transition-all duration-200"
-            >
+            <button onClick={() => setSidebarOpen(false)}>
               <X className="w-5 h-5 text-gray-600" />
             </button>
           )}
         </div>
 
-        {/* Menu Scroll Container */}
+        {/* Menu */}
         <div className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-          <NavItem 
-            to="/dashboard" 
-            icon={LayoutDashboard}
-            minimized={isMinimized}
-          >
+          <NavItem to="/dashboard" icon={LayoutDashboard}>
             Dashboard
           </NavItem>
 
-          <NavItem 
-            to="/analytics" 
-            icon={BarChart3} 
-            badge="3"
-            minimized={isMinimized}
-          >
+          <NavItem to="/analytics" icon={BarChart3}>
             Analytics
           </NavItem>
 
-          {/* Inventory Section */}
+          {/* INVENTORY */}
           <CollapsibleSection
             icon={Package}
             title="Inventory"
@@ -282,18 +260,18 @@ const Sidebar = ({
             <SubNavItem to="/product" icon={Package}>
               Products
             </SubNavItem>
-            <SubNavItem to="/type" icon={Users}>
+            <SubNavItem to="/type" icon={Tag}>
               Type Product
             </SubNavItem>
-            <SubNavItem to="/category" icon={Building2}>
+            <SubNavItem to="/category" icon={FolderTree}>
               Category Product
             </SubNavItem>
-            <SubNavItem to="/subtype" icon={Users}>
+            <SubNavItem to="/subtype" icon={Layers}>
               Subtype Product
             </SubNavItem>
           </CollapsibleSection>
 
-          {/* Master Data Section (Admin Only) */}
+          {/* MASTER DATA */}
           {isAdmin && (
             <CollapsibleSection
               icon={FolderKanban}
@@ -317,11 +295,7 @@ const Sidebar = ({
             </CollapsibleSection>
           )}
 
-          <NavItem 
-            to="/settings" 
-            icon={Settings}
-            minimized={isMinimized}
-          >
+          <NavItem to="/settings" icon={Settings}>
             System Settings
           </NavItem>
         </div>
@@ -329,33 +303,29 @@ const Sidebar = ({
     );
   };
 
-  /* =====================
-   * Layout
-   * ===================== */
   return (
     <>
-      {/* ================= Desktop ================= */}
+      {/* Desktop */}
       <aside
         className={`
           hidden lg:flex fixed inset-y-0 left-0 z-30
           bg-white border-r border-gray-100
           transition-all duration-300 ease-in-out
           ${minimized ? "w-20" : "w-72"}
-          shadow-sm
         `}
       >
         <SidebarContent isMobile={false} />
       </aside>
 
-      {/* ================= Mobile Overlay ================= */}
+      {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 lg:hidden animate-fadeIn"
+          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* ================= Mobile ================= */}
+      {/* Mobile */}
       <aside
         className={`
           fixed top-0 left-0 z-40 h-full w-72 bg-white shadow-2xl
