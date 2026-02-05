@@ -282,11 +282,14 @@ const Sidebar = ({
             <SubNavItem to="/product" icon={Package}>
               Products
             </SubNavItem>
-            <SubNavItem to="/inventory/suppliers" icon={Users}>
-              Suppliers
+            <SubNavItem to="/type" icon={Users}>
+              Type Product
             </SubNavItem>
-            <SubNavItem to="/inventory/warehouse" icon={Building2}>
-              Warehouse
+            <SubNavItem to="/category" icon={Building2}>
+              Category Product
+            </SubNavItem>
+            <SubNavItem to="/subtype" icon={Users}>
+              Subtype Product
             </SubNavItem>
           </CollapsibleSection>
 

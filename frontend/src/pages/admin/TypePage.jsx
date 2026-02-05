@@ -3,9 +3,11 @@ import api from "../../services/api";
 import { Plus, X, Pencil, Trash2, Loader2 } from "lucide-react";
 import Swal from "sweetalert2";
 
-export default function ProductPage() {
-  const [products, setProducts] = useState([]);
+export default function TypePage() {
   const [types, setTypes] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [subtypes, setSubtypes] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -13,57 +15,59 @@ export default function ProductPage() {
   const [editingId, setEditingId] = useState(null);
 
   const [form, setForm] = useState({
-    type_id: "",
-    harga_jual: "",
+    category_id: "",
+    subtype_id: "",
+    nama: "",
   });
 
   /* ================= FETCH ================= */
-  const fetchProducts = async () => {
-    const res = await api.get("/products");
-    setProducts(res.data);
-  };
 
   const fetchTypes = async () => {
     const res = await api.get("/product-types");
-    setTypes(
-      res.data.sort((a, b) =>
-        `${a.category?.nama} ${a.subtype?.nama} ${a.nama}`.localeCompare(
-          `${b.category?.nama} ${b.subtype?.nama} ${b.nama}`
-        )
-      )
-    );
+    setTypes(res.data);
+  };
+
+  const fetchCategories = async () => {
+    const res = await api.get("/product-categories");
+    setCategories(res.data);
+  };
+
+  const fetchSubtypes = async () => {
+    const res = await api.get("/product-subtypes");
+    setSubtypes(res.data);
   };
 
   useEffect(() => {
-    Promise.all([fetchProducts(), fetchTypes()])
+    Promise.all([fetchTypes(), fetchCategories(), fetchSubtypes()])
       .catch(() => Swal.fire("Error", "Gagal memuat data", "error"))
       .finally(() => setLoading(false));
   }, []);
 
-  /* ================= FILTER TYPE BELUM DIPAKAI ================= */
-  const availableTypes = types.filter(
-    (t) => !products.some((p) => p.type_id === t.id)
-  );
-
   /* ================= ACTION ================= */
+
   const openCreate = () => {
     setEditingId(null);
-    setForm({ type_id: "", harga_jual: "" });
+    setForm({
+      category_id: "",
+      subtype_id: "",
+      nama: "",
+    });
     setShowModal(true);
   };
 
-  const openEdit = (p) => {
-    setEditingId(p.id);
+  const openEdit = (t) => {
+    setEditingId(t.id);
     setForm({
-      type_id: p.type_id,
-      harga_jual: String(Math.floor(Number(p.harga_jual))),
+      category_id: t.category_id,
+      subtype_id: t.subtype_id,
+      nama: t.nama,
     });
     setShowModal(true);
   };
 
   const handleDelete = async (id) => {
     const confirm = await Swal.fire({
-      title: "Hapus Produk?",
+      title: "Hapus Type?",
       text: "Data tidak bisa dikembalikan",
       icon: "warning",
       showCancelButton: true,
@@ -74,11 +78,11 @@ export default function ProductPage() {
     if (!confirm.isConfirmed) return;
 
     try {
-      await api.delete(`/products/${id}`);
-      Swal.fire("Berhasil", "Produk dihapus", "success");
-      fetchProducts();
+      await api.delete(`/product-types/${id}`);
+      Swal.fire("Berhasil", "Type dihapus", "success");
+      fetchTypes();
     } catch {
-      Swal.fire("Gagal", "Tidak bisa menghapus produk", "error");
+      Swal.fire("Gagal", "Type sedang dipakai produk", "error");
     }
   };
 
@@ -88,32 +92,34 @@ export default function ProductPage() {
 
     try {
       if (editingId) {
-        await api.put(`/products/${editingId}`, {
-          harga_jual: Number(form.harga_jual),
-        });
-        Swal.fire("Berhasil", "Harga diperbarui", "success");
+        await api.put(`/product-types/${editingId}`, form);
+        Swal.fire("Berhasil", "Type diperbarui", "success");
       } else {
-        await api.post("/products", {
-          type_id: form.type_id,
-          harga_jual: Number(form.harga_jual),
-        });
-        Swal.fire("Berhasil", "Produk ditambahkan", "success");
+        await api.post("/product-types", form);
+        Swal.fire("Berhasil", "Type ditambahkan", "success");
       }
 
       setShowModal(false);
-      fetchProducts();
+      fetchTypes();
     } catch (err) {
       Swal.fire(
         "Gagal",
         err.response?.data?.message || "Terjadi kesalahan",
-        "error"
+        "error",
       );
     } finally {
       setSubmitting(false);
     }
   };
 
+  /* ================= FILTER SUBTYPE ================= */
+
+  const filteredSubtypes = subtypes.filter(
+    (s) => s.category_id == form.category_id,
+  );
+
   /* ================= LOADING ================= */
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-slate-300">
@@ -129,44 +135,30 @@ export default function ProductPage() {
 
         {/* CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((p) => (
+          {types.map((t) => (
             <div
-              key={p.id}
+              key={t.id}
               className="bg-slate-900 border border-slate-700 rounded-2xl p-5 space-y-4"
             >
               <div>
                 <h3 className="text-lg font-bold text-emerald-400">
-                  {p.kode_produk}
+                  {t.nama}
                 </h3>
                 <p className="text-sm text-slate-400">
-                  {p.category?.nama} {p.subtype?.nama} {p.type?.nama}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400">Harga Jual</p>
-                <p className="text-xl font-bold">
-                  Rp{" "}
-                  {Number(p.harga_jual).toLocaleString("id-ID", {
-                    maximumFractionDigits: 0,
-                  })}
-                  <span className="text-sm font-normal text-slate-400">
-                    {" "}
-                    / {p.category?.satuan}
-                  </span>
+                  {t.category?.nama} – {t.subtype?.nama}
                 </p>
               </div>
 
               <div className="flex gap-2">
                 <button
-                  onClick={() => openEdit(p)}
+                  onClick={() => openEdit(t)}
                   className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/40"
                 >
                   <Pencil size={16} /> Edit
                 </button>
 
                 <button
-                  onClick={() => handleDelete(p.id)}
+                  onClick={() => handleDelete(t.id)}
                   className="flex items-center justify-center px-4 rounded-xl bg-red-600/20 hover:bg-red-600/40"
                 >
                   <Trash2 size={16} />
@@ -177,12 +169,12 @@ export default function ProductPage() {
         </div>
       </div>
 
-      {/* FLOATING BUTTON */}
+      {/* FLOAT BUTTON */}
       <button
         onClick={openCreate}
         className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-6 py-3 rounded-full bg-emerald-600 hover:bg-emerald-500 shadow-xl"
       >
-        <Plus size={20} /> Tambah Produk
+        <Plus size={20} /> Tambah Type
       </button>
 
       {/* MODAL */}
@@ -191,7 +183,7 @@ export default function ProductPage() {
           <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl p-6">
             <div className="flex justify-between mb-4">
               <h2 className="font-semibold">
-                {editingId ? "Edit Harga" : "Tambah Produk"}
+                {editingId ? "Edit Type" : "Tambah Type"}
               </h2>
               <button onClick={() => setShowModal(false)}>
                 <X />
@@ -199,49 +191,58 @@ export default function ProductPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* TYPE */}
+              {/* CATEGORY */}
               <div>
-                <label className="text-sm text-slate-400">Type</label>
-
-                {editingId ? (
-                  <input
-                    disabled
-                    value={
-                      types.find((t) => t.id == form.type_id)
-                        ? `${types.find((t) => t.id == form.type_id)?.category?.nama} – ${types.find((t) => t.id == form.type_id)?.subtype?.nama} – ${types.find((t) => t.id == form.type_id)?.nama}`
-                        : ""
-                    }
-                    className="input bg-slate-800 cursor-not-allowed"
-                  />
-                ) : (
-                  <select
-                    value={form.type_id}
-                    onChange={(e) =>
-                      setForm({ ...form, type_id: e.target.value })
-                    }
-                    className="input"
-                    required
-                  >
-                    <option value="">Pilih Type</option>
-                    {availableTypes.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.category?.nama} – {t.subtype?.nama} – {t.nama}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              {/* HARGA */}
-              <div>
-                <label className="text-sm text-slate-400">Harga Jual</label>
-                <input
-                  value={formatRupiah(form.harga_jual)}
+                <label className="text-sm text-slate-400">Category</label>
+                <select
+                  value={form.category_id}
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      harga_jual: e.target.value.replace(/\D/g, ""),
+                      category_id: e.target.value,
+                      subtype_id: "",
                     })
+                  }
+                  className="input"
+                  required
+                >
+                  <option value="">Pilih Category</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nama}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* SUBTYPE */}
+              <div>
+                <label className="text-sm text-slate-400">Subtype</label>
+                <select
+                  value={form.subtype_id}
+                  onChange={(e) =>
+                    setForm({ ...form, subtype_id: e.target.value })
+                  }
+                  className="input"
+                  required
+                  disabled={!form.category_id}
+                >
+                  <option value="">Pilih Subtype</option>
+                  {filteredSubtypes.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nama}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* NAMA TYPE */}
+              <div>
+                <label className="text-sm text-slate-400">Nama Type</label>
+                <input
+                  value={form.nama}
+                  onChange={(e) =>
+                    setForm({ ...form, nama: e.target.value.toUpperCase() })
                   }
                   className="input"
                   required
@@ -272,10 +273,4 @@ export default function ProductPage() {
       `}</style>
     </div>
   );
-}
-
-/* ================= HELPERS ================= */
-function formatRupiah(val) {
-  if (!val) return "";
-  return val.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
