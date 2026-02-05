@@ -67,7 +67,6 @@ export default function CategoryPage() {
     try {
       await api.delete(`/product-categories/${id}`);
       await fetchData();
-
       Swal.fire("Berhasil", "Category berhasil dihapus", "success");
     } catch (err) {
       Swal.fire("Error", "Gagal menghapus category", "error");
@@ -110,7 +109,8 @@ export default function CategoryPage() {
   return (
     <div className="min-h-screen text-slate-200 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* GRID 4 PER BARIS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {data.map((c) => (
             <div
               key={c.id}
@@ -145,6 +145,7 @@ export default function CategoryPage() {
         </div>
       </div>
 
+      {/* FLOAT BUTTON */}
       <button
         onClick={openCreate}
         className="fixed bottom-6 right-6 flex items-center gap-2 px-6 py-3 rounded-full bg-emerald-600 hover:bg-emerald-500 shadow-xl"
@@ -152,6 +153,7 @@ export default function CategoryPage() {
         <Plus size={20} /> Tambah Category
       </button>
 
+      {/* MODAL */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60">
           <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl p-6">
@@ -211,16 +213,6 @@ export default function CategoryPage() {
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .input {
-          width: 100%;
-          background: rgb(15 23 42 / 0.7);
-          border: 2px solid rgb(51 65 85);
-          border-radius: 0.75rem;
-          padding: 0.75rem 1rem;
-        }
-      `}</style>
     </div>
   );
 }

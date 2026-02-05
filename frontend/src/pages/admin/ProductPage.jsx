@@ -45,6 +45,8 @@ export default function ProductPage() {
     (t) => !products.some((p) => p.type_id === t.id)
   );
 
+  const selectedType = types.find((t) => t.id == form.type_id);
+
   /* ================= ACTION ================= */
   const openCreate = () => {
     setEditingId(null);
@@ -126,9 +128,8 @@ export default function ProductPage() {
   return (
     <div className="min-h-screen text-slate-200 p-6">
       <div className="max-w-7xl mx-auto">
-
-        {/* CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* GRID 4 PER BARIS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {products.map((p) => (
             <div
               key={p.id}
@@ -207,8 +208,8 @@ export default function ProductPage() {
                   <input
                     disabled
                     value={
-                      types.find((t) => t.id == form.type_id)
-                        ? `${types.find((t) => t.id == form.type_id)?.category?.nama} – ${types.find((t) => t.id == form.type_id)?.subtype?.nama} – ${types.find((t) => t.id == form.type_id)?.nama}`
+                      selectedType
+                        ? `${selectedType.category?.nama} – ${selectedType.subtype?.nama} – ${selectedType.nama}`
                         : ""
                     }
                     className="input bg-slate-800 cursor-not-allowed"
@@ -260,16 +261,6 @@ export default function ProductPage() {
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .input {
-          width: 100%;
-          background: rgb(15 23 42 / 0.7);
-          border: 2px solid rgb(51 65 85);
-          border-radius: 0.75rem;
-          padding: 0.75rem 1rem;
-        }
-      `}</style>
     </div>
   );
 }

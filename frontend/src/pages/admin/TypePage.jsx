@@ -105,7 +105,7 @@ export default function TypePage() {
       Swal.fire(
         "Gagal",
         err.response?.data?.message || "Terjadi kesalahan",
-        "error",
+        "error"
       );
     } finally {
       setSubmitting(false);
@@ -115,7 +115,7 @@ export default function TypePage() {
   /* ================= FILTER SUBTYPE ================= */
 
   const filteredSubtypes = subtypes.filter(
-    (s) => s.category_id == form.category_id,
+    (s) => s.category_id == form.category_id
   );
 
   /* ================= LOADING ================= */
@@ -132,7 +132,6 @@ export default function TypePage() {
   return (
     <div className="min-h-screen text-slate-200 p-6">
       <div className="max-w-7xl mx-auto">
-
         {/* CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {types.map((t) => (
@@ -261,16 +260,6 @@ export default function TypePage() {
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .input {
-          width: 100%;
-          background: rgb(15 23 42 / 0.7);
-          border: 2px solid rgb(51 65 85);
-          border-radius: 0.75rem;
-          padding: 0.75rem 1rem;
-        }
-      `}</style>
     </div>
   );
 }
